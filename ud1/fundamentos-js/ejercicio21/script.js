@@ -1,6 +1,8 @@
+// Filtra una lista para conservar solo los números mayores que el valor indicado.
 const salida = document.getElementById("resultado");
 
 function leerLista(texto) {
+  // Convierte cada valor separado por comas a número y descarta los inválidos.
   return texto
     .split(",")
     .map((s) => s.trim())
@@ -10,6 +12,7 @@ function leerLista(texto) {
 }
 
 function mayoresQue(numeros, valor) {
+  // La comparación es estricta: los números iguales al límite no se incluyen.
   return numeros.filter((n) => n > valor);
 }
 

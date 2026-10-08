@@ -1,11 +1,13 @@
+// Comprueba si una palabra se lee igual de izquierda a derecha que al revés.
 const salida = document.getElementById("resultado");
 
 function esPalindromo(palabra) {
-  // se ignoran mayúsculas y tildes para la comparación
+  // Normaliza el texto para que las mayúsculas y las tildes no afecten la comparación.
   const limpia = palabra
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+  // Invierte la palabra normalizada y compara ambas versiones.
   const invertida = limpia.split("").reverse().join("");
   return limpia === invertida;
 }

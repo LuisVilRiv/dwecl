@@ -1,6 +1,8 @@
+// Filtra los valores pares de una lista de números introducida por comas.
 const salida = document.getElementById("resultado");
 
 function leerLista(texto) {
+  // Normaliza cada elemento y lo convierte a número antes del filtrado.
   return texto
     .split(",")
     .map((s) => s.trim())
@@ -10,6 +12,7 @@ function leerLista(texto) {
 }
 
 function soloPares(numeros) {
+  // Un número es par si la división entre dos no deja resto.
   return numeros.filter((n) => n % 2 === 0);
 }
 

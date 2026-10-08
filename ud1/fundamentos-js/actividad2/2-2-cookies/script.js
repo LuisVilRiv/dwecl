@@ -1,8 +1,11 @@
+// Guarda las preferencias del usuario en cookies y las aplica al volver a la página.
 const NOMBRES = ["tema", "idioma", "fuente"];
 const DIAS = 30;
 
 function setCookie(nombre, valor, dias) {
+  // La fecha de expiración se calcula en milisegundos desde la fecha actual.
   const caduca = new Date(Date.now() + dias * 24 * 60 * 60 * 1000);
+  // encodeURIComponent evita que caracteres especiales rompan el formato de la cookie.
   document.cookie =
     nombre + "=" + encodeURIComponent(valor) +
     "; expires=" + caduca.toUTCString() +
@@ -10,6 +13,7 @@ function setCookie(nombre, valor, dias) {
 }
 
 function getCookie(nombre) {
+  // Recorre las cookies hasta encontrar la que coincide con el nombre solicitado.
   const pares = document.cookie.split("; ");
   for (const par of pares) {
     const [clave, valor] = par.split("=");
@@ -19,10 +23,12 @@ function getCookie(nombre) {
 }
 
 function borrarCookie(nombre) {
+  // Una fecha pasada hace que el navegador elimine la cookie.
   document.cookie = nombre + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
 }
 
 function aplicar(prefs) {
+  // Traduce las opciones guardadas a estilos y mensajes visibles.
   const tamanos = { pequena: "14px", normal: "17px", grande: "22px" };
   const mensajes = {
     es: "¡Bienvenido de nuevo! Ya tenemos tus preferencias guardadas.",
@@ -36,6 +42,7 @@ function aplicar(prefs) {
 }
 
 function iniciar() {
+  // Comprueba si ya se han guardado todas las preferencias del formulario.
   const prefs = {};
   for (const nombre of NOMBRES) prefs[nombre] = getCookie(nombre);
 
@@ -52,6 +59,7 @@ function iniciar() {
 }
 
 document.getElementById("guardar").addEventListener("click", () => {
+  // Guarda cada opción seleccionada y vuelve a aplicar el estado actualizado.
   for (const nombre of NOMBRES) {
     setCookie(nombre, document.getElementById(nombre).value, DIAS);
   }

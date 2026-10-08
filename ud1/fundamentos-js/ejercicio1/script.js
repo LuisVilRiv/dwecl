@@ -1,3 +1,4 @@
+// Recorre ejemplos de valores primitivos, especiales y compuestos.
 const salida = typeof document !== "undefined" ? document.getElementById("resultado") : null;
 
 function mostrar(texto) {
@@ -5,6 +6,7 @@ function mostrar(texto) {
 }
 
 function descripcion(valor) {
+  // Convierte a texto valores que no se muestran bien con String(), como objetos o funciones.
   if (typeof valor === "symbol") return valor.toString();
   if (typeof valor === "function") return "[Function]";
   if (typeof valor === "object" && valor !== null) return JSON.stringify(valor);
@@ -12,6 +14,7 @@ function descripcion(valor) {
 }
 
 function ejecutar() {
+  // Cada constante ejemplifica un tipo de dato de JavaScript.
   const nombre = "Ana";
   const edad = 25;
   const altura = 1.68;
@@ -29,6 +32,7 @@ function ejecutar() {
   const compuestos = { lista, objeto, funcion };
   let texto = "";
 
+  // Se agrupan los valores para mostrar cada conjunto con un método distinto de console.
   for (const [clave, valor] of Object.entries(primitivos)) {
     console.log(clave + ": " + descripcion(valor) + " -> " + typeof valor);
     texto += clave + ": " + descripcion(valor) + " -> " + typeof valor + "\n";
@@ -45,6 +49,7 @@ function ejecutar() {
   }
 
   try {
+    // La reasignación provoca un error porque nombre se declaró con const.
     nombre = "Otro"; // las constantes no se pueden reasignar
   } catch (error) {
     console.error("Error controlado:", error.message);

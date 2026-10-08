@@ -1,6 +1,8 @@
+// Ordena numéricamente una lista de valores separada por comas.
 const salida = document.getElementById("resultado");
 
 function leerLista(texto) {
+  // Convierte el texto del campo en un array y descarta entradas no numéricas.
   return texto
     .split(",")
     .map((s) => s.trim())
@@ -10,6 +12,7 @@ function leerLista(texto) {
 }
 
 function ordenar(numeros) {
+  // sort() compara números con a - b; la copia evita modificar el array original.
   return [...numeros].sort((a, b) => a - b);
 }
 

@@ -1,9 +1,12 @@
+// Busca la palabra de mayor longitud dentro de una frase.
 const salida = document.getElementById("resultado");
 
 function palabraMasLarga(frase) {
+  // Separa la frase por espacios y conserva la palabra más larga encontrada.
   const palabras = frase.trim().split(/\s+/);
   let larga = "";
   for (let i = 0; i < palabras.length; i++) {
+    // Solo se reemplaza el resultado cuando aparece una palabra más larga.
     if (palabras[i].length > larga.length) {
       larga = palabras[i];
     }
