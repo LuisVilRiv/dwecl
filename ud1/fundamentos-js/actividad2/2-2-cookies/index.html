@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Actividad 2.2 - Preferencias con cookies</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="tarjeta">
+    <h1>Preferencias de usuario</h1>
+
+    <section id="formulario">
+      <p class="enunciado">Es tu primera visita: elige tus preferencias. Se guardarán en tres cookies.</p>
+
+      <label for="tema">Tema (cookie "tema")</label>
+      <select id="tema">
+        <option value="claro">Claro</option>
+        <option value="oscuro">Oscuro</option>
+      </select>
+
+      <label for="idioma">Idioma (cookie "idioma")</label>
+      <select id="idioma">
+        <option value="es">Español</option>
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+      </select>
+
+      <label for="fuente">Tamaño de letra (cookie "fuente")</label>
+      <select id="fuente">
+        <option value="pequena">Pequeña</option>
+        <option value="normal" selected>Normal</option>
+        <option value="grande">Grande</option>
+      </select>
+
+      <button id="guardar">Guardar preferencias</button>
+    </section>
+
+    <section id="bienvenida" hidden>
+      <p id="mensaje" class="enunciado"></p>
+      <p>Cookies leídas con document.cookie:</p>
+      <div id="resultado" class="resultado"></div>
+      <button id="borrar">Borrar preferencias</button>
+    </section>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

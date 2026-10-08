@@ -1,0 +1,94 @@
+/* Estilos comunes de todos los ejercicios */
+:root {
+  --primario: #4f46e5;
+  --primario-oscuro: #4338ca;
+  --texto: #1f2937;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: var(--texto);
+  background: linear-gradient(135deg, #e0e7ff, #f3f4f6);
+}
+
+.tarjeta {
+  width: 100%;
+  max-width: 720px;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  margin-top: 0;
+  color: var(--primario);
+}
+
+.enunciado {
+  padding: 0.8rem 1rem;
+  background: #eef2ff;
+  border-left: 4px solid var(--primario);
+  border-radius: 6px;
+}
+
+label {
+  display: block;
+  margin: 1rem 0 0.3rem;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+input:focus {
+  outline: 2px solid var(--primario);
+  border-color: transparent;
+}
+
+button {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  color: #fff;
+  background: var(--primario);
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+button:hover {
+  background: var(--primario-oscuro);
+  transform: translateY(-1px);
+}
+
+.resultado {
+  min-height: 3rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  font-family: Consolas, "Courier New", monospace;
+  color: #a7f3d0;
+  background: #111827;
+  border-radius: 8px;
+  white-space: pre-wrap;
+}
+
+.resultado:empty::before {
+  content: "Aquí aparecerá el resultado...";
+  color: #6b7280;
+}

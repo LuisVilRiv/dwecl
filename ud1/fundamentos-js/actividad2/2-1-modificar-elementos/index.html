@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Actividad 2.1 - Modificar contenido y estilos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="tarjeta">
+    <h1 id="titulo">Título de ejemplo</h1>
+    <p id="parrafo">Este párrafo se puede modificar desde el formulario o desde las DevTools.</p>
+
+    <div class="caja flex">
+      <div class="item">Uno</div>
+      <div class="item">Dos</div>
+      <div class="item">Tres</div>
+    </div>
+
+    <div class="caja grid">
+      <div class="item">A</div>
+      <div class="item">B</div>
+      <div class="item">C</div>
+      <div class="item">D</div>
+    </div>
+
+    <label for="nuevoTexto">Nuevo texto del título</label>
+    <input type="text" id="nuevoTexto" value="Título modificado con JavaScript">
+
+    <label for="color">Color del título</label>
+    <input type="color" id="color" value="#e11d48">
+
+    <label for="tamano">Tamaño del párrafo (px)</label>
+    <input type="range" id="tamano" min="14" max="40" value="18">
+
+    <button id="aplicar">Aplicar cambios</button>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
