@@ -1,4 +1,10 @@
 (() => {
+  // Dentro del visor.html la página se ejecuta incrustada (srcdoc) y el visor ya
+  // muestra el código en su pestaña "Ver Código"; aquí no hay URL real que cargar.
+  if (window.location.protocol === "about:" || window.location.href === "about:srcdoc") {
+    return;
+  }
+
   const etiquetaScript = document.currentScript;
   const contenido = document.querySelector("main");
 
