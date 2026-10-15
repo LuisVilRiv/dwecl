@@ -96,6 +96,14 @@
     .modal-card { background:#fff; border-radius:var(--radius); max-width:550px; width:100%; box-shadow:0 10px 30px rgba(0,0,0,.25); overflow:hidden; }
     .hidden { display:none !important; }
     .badge-count { background:#e2e5eb; color:#495057; font-size:.75rem; font-weight:700; padding:.15rem .45rem; border-radius:999px; }
+    main.mode-index { grid-template-columns:1fr; }
+    main.mode-index .sidebar, main.mode-index .viewer-card { display:none; }
+    main.mode-project #index-view { display:none; }
+    .project-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:.8rem; }
+    .project-grid .status-box { grid-column:1/-1; }
+    .project-card { min-height:64px; }
+    .project-path { font-size:.75rem; color:var(--text-muted); font-weight:400; word-break:break-all; }
+    .project-heading { font-size:1.05rem; color:var(--primary); font-weight:700; margin:0 0 .15rem; word-break:break-word; }
     .toast { position:fixed; bottom:2rem; right:2rem; background:#1d3557; color:#fff; padding:.75rem 1.2rem; border-radius:6px; border-left:4px solid var(--accent); box-shadow:0 4px 15px rgba(0,0,0,.2); transform:translateY(100px); opacity:0; transition:all .25s ease; z-index:2000; font-size:.9rem; }
     .toast.show { transform:translateY(0); opacity:1; }
   </style>
@@ -121,27 +129,37 @@
   </div>
 </header>
 
-<main>
-  <aside class="sidebar">
-    <div class="card">
-      <div class="card-header"><h3>Enlace directo GitHub</h3></div>
-      <div class="card-body" style="padding:.8rem 1rem;">
-        <div style="display:flex; gap:.4rem;">
-          <input type="text" id="url-directa" placeholder="https://github.com/.../blob/..." style="flex:1; min-width:0; padding:.4rem .6rem; font-size:.85rem; border:1px solid var(--border); border-radius:4px;">
+<main class="mode-index">
+  <section class="card" id="index-view">
+    <div class="card-header">
+      <h2>📁 Índice de ejercicios <span class="badge-count" id="count-projects">0</span></h2>
+    </div>
+    <div class="card-body">
+      <div style="display:flex; gap:.8rem; flex-wrap:wrap; margin-bottom:1.2rem;">
+        <div class="search-box" style="flex:1; min-width:220px; margin:0;">
+          <svg viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+          <input type="text" id="project-search" placeholder="Filtrar ejercicios (ej. ejercicio1, cookies)...">
+        </div>
+        <div style="display:flex; gap:.4rem; flex:1; min-width:260px;">
+          <input type="text" id="url-directa" placeholder="Enlace directo: https://github.com/.../blob/..." style="flex:1; min-width:0; padding:.45rem .75rem; font-size:.88rem; border:1px solid var(--border); border-radius:6px;">
           <button class="btn btn-primary btn-sm" id="btn-cargar-directa">Ver</button>
         </div>
       </div>
+      <div class="project-grid" id="project-list"></div>
     </div>
+  </section>
 
+  <aside class="sidebar">
     <div class="card">
       <div class="card-header">
-        <h3>📁 Proyectos Detectados <span class="badge-count" id="count-projects">0</span></h3>
+        <button class="btn btn-outline btn-sm" id="btn-back" title="Volver al índice de ejercicios">← Volver al índice</button>
       </div>
       <div class="card-body">
-        <div class="project-list" id="project-list"></div>
+        <div id="project-title" style="margin-bottom:.8rem;"></div>
+        <button class="btn btn-success btn-sm hidden" id="btn-run-project" style="margin-bottom:.9rem;">▶ Ver ejecución</button>
         <div class="search-box">
           <svg viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
-          <input type="text" id="file-search" placeholder="Filtrar archivos (ej. script.ts, .css)...">
+          <input type="text" id="file-search" placeholder="Filtrar archivos (ej. script.js, .css)...">
         </div>
         <ul class="file-tree" id="file-tree"><li class="status-box">Cargando árbol de archivos...</li></ul>
       </div>
@@ -275,7 +293,8 @@
     btnRaw: $("btn-raw"), btnGithub: $("btn-github"), btnLaunchPreview: $("btn-launch-preview"),
     btnOpenExternal: $("btn-open-external"), btnTheme: $("btn-theme"), btnUserRepos: $("btn-user-repos"),
     btnToken: $("btn-token"), urlDirecta: $("url-directa"), btnCargarDirecta: $("btn-cargar-directa"),
-    toast: $("toast")
+    toast: $("toast"), main: document.querySelector("main"), projectSearch: $("project-search"),
+    btnBack: $("btn-back"), projectTitle: $("project-title"), btnRunProject: $("btn-run-project")
   };
 
   function escapeHtml(str) {
@@ -337,7 +356,8 @@
   async function loadRepository(owner, repo) {
     state.owner = owner; state.repo = repo; state.currentFile = null;
     dom.inputRepo.value = owner + "/" + repo;
-    showStatus("Analizando estructura del repositorio...");
+    showIndex(true);
+    setLoading("Analizando estructura del repositorio...");
     try {
       var repoData = await githubApi("repos/" + owner + "/" + repo);
       dom.headerDesc.textContent = repoData.description || ("Repositorio de " + owner + " (" + repoData.stargazers_count + " ⭐)");
@@ -352,12 +372,12 @@
       });
       await loadTree();
     } catch (err) {
-      showError("No se pudo cargar el repositorio: " + err.message);
+      fail("No se pudo cargar el repositorio: " + err.message);
     }
   }
 
   async function loadTree() {
-    showStatus("Explorando ficheros en la rama '" + escapeHtml(state.branch) + "'...");
+    setLoading("Explorando ficheros en la rama '" + escapeHtml(state.branch) + "'...");
     try {
       var treeData = await githubApi("repos/" + state.owner + "/" + state.repo + "/git/trees/" + encodeURIComponent(state.branch) + "?recursive=1");
       state.tree = (treeData.tree || []).filter(function(item) {
@@ -370,13 +390,15 @@
       var targetFile = params.get("f") || params.get("file");
       if (targetFile && !state.currentFile) {
         var found = state.tree.find(function(f) { return f.path === targetFile; });
-        if (found) { selectProjectForFile(targetFile); loadFile(targetFile, found.size, true); return; }
+        // Se ignora un ?f= que apunte a un fichero vacío o .gitkeep (p. ej. una URL guardada por la versión antigua)
+        if (found && found.size > 0 && !/\.gitkeep$/i.test(found.path)) {
+          selectProjectForFile(targetFile); loadFile(targetFile, found.size, true); return;
+        }
       }
 
-      var keys = Object.keys(state.projects).filter(function(k) { return k !== "Todos los archivos"; });
-      selectProject(keys.length > 0 ? keys[0] : "Todos los archivos");
+      showIndex(true); // sin ?f= válido se muestra el índice de ejercicios
     } catch (err) {
-      showError("Error al leer el árbol de ficheros: " + err.message);
+      fail("Error al leer el árbol de ficheros: " + err.message);
     }
   }
 
@@ -412,29 +434,53 @@
     state.projects = ordered;
   }
 
+  function projectLabel(group) {
+    var icon = group === "Todos los archivos" ? "📂" : (group === "Raíz / General" ? "📄" : "🚀");
+    var parts = group.split("/");
+    var isPath = group !== "Todos los archivos" && group !== "Raíz / General";
+    return {
+      icon: icon,
+      name: isPath ? parts[parts.length - 1] : group,
+      path: isPath && parts.length > 1 ? parts.slice(0, -1).join("/") : ""
+    };
+  }
+
+  /* Vista "índice": una tarjeta por ejercicio/proyecto */
   function renderProjects() {
     dom.projectList.innerHTML = "";
+    var filter = (dom.projectSearch.value || "").trim().toLowerCase();
     var groups = Object.keys(state.projects);
     dom.countProjects.textContent = groups.filter(function(g) { return g !== "Todos los archivos"; }).length;
+    var shown = 0;
 
     groups.forEach(function(group) {
+      if (filter && group.toLowerCase().indexOf(filter) === -1) return;
+      shown++;
       var files = state.projects[group];
       var indexFile = files.find(function(f) { return f.path === group + "/index.html"; });
+      var lab = projectLabel(group);
 
       var card = document.createElement("div");
-      card.className = "project-card" + (state.activeProject === group ? " active" : "");
+      card.className = "project-card";
       card.dataset.group = group;
 
       var info = document.createElement("div");
       info.className = "project-info";
       var title = document.createElement("div");
       title.className = "project-name";
-      var icon = group === "Todos los archivos" ? "📂" : (group === "Raíz / General" ? "📄" : "🚀");
-      title.innerHTML = icon + " <strong>" + escapeHtml(group) + "</strong>";
+      title.innerHTML = lab.icon + " <strong>" + escapeHtml(lab.name) + "</strong>";
+      info.appendChild(title);
+      if (lab.path) {
+        var pth = document.createElement("div");
+        pth.className = "project-path";
+        pth.textContent = lab.path;
+        info.appendChild(pth);
+      }
       var meta = document.createElement("div");
       meta.className = "project-meta";
       meta.textContent = files.length + " archivo" + (files.length !== 1 ? "s" : "");
-      info.appendChild(title); info.appendChild(meta); card.appendChild(info);
+      info.appendChild(meta);
+      card.appendChild(info);
 
       if (indexFile && group !== "Todos los archivos") {
         var btnVer = document.createElement("button");
@@ -447,17 +493,67 @@
       card.onclick = function() { selectProject(group); };
       dom.projectList.appendChild(card);
     });
+
+    if (shown === 0) {
+      dom.projectList.innerHTML = '<div class="status-box">' + (groups.length ? "Ningún ejercicio coincide con el filtro" : "No hay proyectos que mostrar") + '</div>';
+    }
   }
 
-  /* Al cambiar de proyecto se descarta el fichero actual para que se cargue el fichero por defecto del nuevo proyecto.
-     keepFile = true cuando se navega a un fichero concreto (no se debe perder). */
+  /* Vuelve al índice (sin ejercicio abierto). keepUrl = true para no tocar el ?f= de la URL */
+  function showIndex(keepUrl) {
+    state.currentFile = null;
+    state.activeProject = null;
+    state.currentHtmlTarget = null;
+    state.activeMode = "code";
+    dom.tabBtnCode.classList.add("active");
+    dom.tabBtnPreview.classList.remove("active");
+    dom.previewFrame.srcdoc = "";
+    dom.fileSearch.value = "";
+    dom.main.className = "mode-index";
+    if (!keepUrl) {
+      try {
+        var u = new URL(window.location);
+        u.searchParams.delete("f"); u.searchParams.delete("file");
+        window.history.replaceState({}, "", u);
+      } catch (e) {}
+    }
+    renderProjects();
+    window.scrollTo(0, 0);
+  }
+
+  function setLoading(msg) {
+    dom.projectList.innerHTML = '<div class="status-box"><div class="spinner"></div><p>' + msg + '</p></div>';
+    if (!dom.main.classList.contains("mode-index")) showStatus(msg);
+  }
+
+  function fail(msg) {
+    if (dom.main.classList.contains("mode-index")) {
+      dom.projectList.innerHTML = '<div class="status-box error"><p style="font-weight:bold;">⚠️ No se pudo cargar</p><p>' + escapeHtml(msg) + '</p></div>';
+    } else showError(msg);
+  }
+
+  /* Abre un ejercicio: muestra solo su lista de archivos y el visor. keepFile = true si se va a un fichero concreto */
   function selectProject(groupName, keepFile) {
     state.activeProject = groupName;
-    if (!keepFile) state.currentFile = null;
-    Array.from(dom.projectList.children).forEach(function(el) {
-      el.classList.toggle("active", el.dataset.group === groupName);
-    });
+    if (!keepFile) { state.currentFile = null; dom.fileSearch.value = ""; }
+    dom.main.className = "mode-project";
+
+    var lab = projectLabel(groupName);
+    dom.projectTitle.innerHTML =
+      '<div class="project-heading">' + lab.icon + " " + escapeHtml(lab.name) + "</div>" +
+      (lab.path ? '<div class="project-path">' + escapeHtml(lab.path) + "</div>" : "");
+
+    var files = state.projects[groupName] || [];
+    var indexFile = files.find(function(f) { return f.path === groupName + "/index.html"; });
+    if (indexFile && groupName !== "Todos los archivos") {
+      dom.btnRunProject.classList.remove("hidden");
+      dom.btnRunProject.onclick = function() { launchExecution(indexFile.path); };
+    } else {
+      dom.btnRunProject.classList.add("hidden");
+    }
+
     renderFileList();
+    window.scrollTo(0, 0);
   }
 
   function selectProjectForFile(filePath) {
@@ -847,8 +943,10 @@
     else loadRepository(val, val + ".github.io");
   };
   dom.inputRepo.onkeydown = function(e) { if (e.key === "Enter") dom.btnLoadRepo.click(); };
-  dom.selectBranch.onchange = function() { state.branch = dom.selectBranch.value; state.currentFile = null; loadTree(); };
+  dom.selectBranch.onchange = function() { state.branch = dom.selectBranch.value; showIndex(); loadTree(); };
   dom.fileSearch.oninput = renderFileList;
+  dom.projectSearch.oninput = renderProjects;
+  dom.btnBack.onclick = function() { showIndex(); };
 
   dom.btnCopy.onclick = function() {
     if (!state.currentFile) return;
