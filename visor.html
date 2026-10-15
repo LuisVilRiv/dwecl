@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visor de Proyectos y Código — GitHub</title>
+  <link rel="stylesheet" id="theme-link" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    :root {
+      --primary: #1d3557; --primary-dark: #14213d; --primary-light: #457b9d;
+      --accent: #2cd326; --accent-hover: #24af1f; --accent-subtle: #e8f8e8;
+      --danger: #e63946; --bg: #f4f5f8; --card-bg: #ffffff; --border: #e2e5eb;
+      --text: #212529; --text-muted: #6c757d;
+      --code-bg: #0d1117; --code-text: #e6edf3; --line-num-color: #7d8590; --line-num-border: #30363d;
+      --radius: 8px; --shadow: 0 4px 12px rgba(0,0,0,0.06);
+      --font-mono: "JetBrains Mono","Fira Code",Consolas,Menlo,Monaco,monospace;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,Arial,sans-serif; margin:0; background:var(--bg); color:var(--text); line-height:1.5; }
+    header { background: linear-gradient(135deg,#1d3557 0%,#14213d 100%); color:#fff; padding:1.5rem 2rem; border-bottom:3px solid var(--accent); }
+    .header-container { max-width:1400px; margin:0 auto; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:1.2rem; }
+    .header-title h1 { margin:0; font-size:1.6rem; font-weight:700; display:flex; align-items:center; gap:.6rem; }
+    .header-title p { margin:.3rem 0 0; opacity:.85; font-size:.92rem; }
+    .repo-control { display:flex; align-items:center; gap:.5rem; background:rgba(255,255,255,.1); padding:.4rem .6rem; border-radius:var(--radius); border:1px solid rgba(255,255,255,.2); flex-wrap:wrap; }
+    .repo-control input, .repo-control select { background:#fff; border:1px solid #ccc; border-radius:6px; padding:.45rem .75rem; font-size:.9rem; color:#333; font-weight:600; }
+    .repo-control input { min-width:220px; }
+    .repo-control select { cursor:pointer; }
+    .btn { display:inline-flex; align-items:center; gap:.4rem; padding:.45rem .9rem; border-radius:6px; border:none; font-size:.88rem; font-weight:600; cursor:pointer; transition:background .15s ease, transform .1s ease; text-decoration:none; }
+    .btn:active { transform:translateY(1px); }
+    .btn-primary { background:var(--accent); color:#14213d; }
+    .btn-primary:hover { background:var(--accent-hover); color:#fff; }
+    .btn-success { background:var(--accent); color:#14213d; }
+    .btn-success:hover { background:var(--accent-hover); color:#fff; }
+    .btn-secondary { background:rgba(255,255,255,.2); color:#fff; }
+    .btn-secondary:hover { background:rgba(255,255,255,.35); }
+    .btn-sm { padding:.3rem .65rem; font-size:.8rem; }
+    .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+    .btn-outline:hover { background:#e9ecef; }
+    main { max-width:1400px; margin:1.5rem auto; padding:0 1.5rem; display:grid; grid-template-columns:340px 1fr; gap:1.5rem; align-items:start; }
+    @media (max-width:960px) { main { grid-template-columns:1fr; } }
+    .card { background:var(--card-bg); border-radius:var(--radius); border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
+    .card-header { padding:.9rem 1.2rem; border-bottom:1px solid var(--border); background:#fafbfc; display:flex; justify-content:space-between; align-items:center; }
+    .card-header h2,.card-header h3 { margin:0; font-size:1.05rem; font-weight:700; color:var(--primary); display:flex; align-items:center; gap:.5rem; }
+    .card-body { padding:1.2rem; }
+    .sidebar { display:flex; flex-direction:column; gap:1.2rem; }
+    .project-list { display:flex; flex-direction:column; gap:.6rem; margin-bottom:1rem; }
+    .project-card { border:1px solid var(--border); border-radius:6px; padding:.75rem .9rem; background:#fafbfc; cursor:pointer; transition:all .15s ease; display:flex; justify-content:space-between; align-items:center; gap:.5rem; }
+    .project-card:hover { border-color:var(--primary-light); background:#f0f4f8; }
+    .project-card.active { border-color:var(--accent); background:var(--accent-subtle); font-weight:600; }
+    .project-info { display:flex; flex-direction:column; gap:.15rem; min-width:0; }
+    .project-name { font-size:.95rem; color:var(--primary); display:flex; align-items:center; gap:.4rem; }
+    .project-meta { font-size:.78rem; color:var(--text-muted); }
+    .search-box { position:relative; margin-bottom:.8rem; }
+    .search-box input { width:100%; padding:.45rem .75rem .45rem 2rem; border:1px solid var(--border); border-radius:6px; font-size:.88rem; }
+    .search-box svg { position:absolute; left:.65rem; top:50%; transform:translateY(-50%); width:14px; height:14px; fill:var(--text-muted); }
+    .file-tree { list-style:none; padding:0; margin:0; max-height:520px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; background:#fff; }
+    .file-item { display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding:.5rem .75rem; font-size:.88rem; border-bottom:1px solid #f0f0f4; cursor:pointer; transition:background .12s ease; font-family:var(--font-mono); }
+    .file-item:last-child { border-bottom:none; }
+    .file-item:hover { background:#f4f7fb; color:var(--primary); }
+    .file-item.active { background:#eef8ee; border-left:3px solid var(--accent); font-weight:600; color:#14213d; }
+    .file-name-group { display:flex; align-items:center; gap:.5rem; overflow:hidden; white-space:nowrap; min-width:0; }
+    .file-name-group span:last-child { overflow:hidden; text-overflow:ellipsis; }
+    .file-badge { font-size:.68rem; padding:.1rem .4rem; border-radius:4px; font-weight:700; text-transform:uppercase; font-family:-apple-system,BlinkMacSystemFont,sans-serif; flex-shrink:0; }
+    .badge-ts{background:#3178c6;color:#fff}.badge-js{background:#f7df1e;color:#000}.badge-html{background:#e34f26;color:#fff}.badge-css{background:#1572b6;color:#fff}.badge-json{background:#009688;color:#fff}.badge-md{background:#083fa1;color:#fff}.badge-other{background:#6c757d;color:#fff}
+    .viewer-card { display:flex; flex-direction:column; min-height:650px; }
+    .view-mode-tabs { display:flex; background:#eef1f6; border-bottom:1px solid var(--border); padding:.5rem 1rem 0; gap:.4rem; }
+    .view-tab-btn { padding:.55rem 1.1rem; border:1px solid transparent; border-bottom:none; border-radius:6px 6px 0 0; background:transparent; font-weight:600; font-size:.9rem; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:.4rem; transition:all .15s ease; }
+    .view-tab-btn:hover { background:rgba(255,255,255,.6); color:var(--primary); }
+    .view-tab-btn.active { background:var(--card-bg); color:var(--primary); border-color:var(--border); border-bottom-color:var(--card-bg); margin-bottom:-1px; }
+    .viewer-toolbar { padding:.75rem 1.2rem; background:#f8f9fa; border-bottom:1px solid var(--border); display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:.8rem; }
+    .file-breadcrumbs { font-family:var(--font-mono); font-size:.88rem; color:var(--primary); display:flex; flex-wrap:wrap; align-items:center; gap:.35rem; word-break:break-all; }
+    .file-breadcrumbs span.sep { color:var(--text-muted); }
+    .viewer-actions { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
+    .code-wrapper { position:relative; background:var(--code-bg); color:var(--code-text); flex:1; display:flex; overflow:auto; }
+    .code-container { margin:0; width:100%; background:var(--code-bg); color:var(--code-text); display:flex; font-family:var(--font-mono); font-size:.92rem; line-height:1.6; }
+    .line-numbers { padding:1.2rem .8rem 1.2rem 1rem; text-align:right; color:var(--line-num-color); user-select:none; border-right:1px solid var(--line-num-border); font-size:.92rem; font-family:var(--font-mono); white-space:pre; line-height:inherit; }
+    .code-content { flex:1; padding:1.2rem !important; margin:0; background:transparent !important; color:var(--code-text) !important; overflow-x:auto; white-space:pre; font-family:var(--font-mono); font-size:.92rem; line-height:inherit; }
+    .preview-wrapper { flex:1; display:flex; flex-direction:column; background:#fff; }
+    .preview-header { padding:.6rem 1rem; background:#f1f3f7; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem; }
+    .preview-device-buttons { display:flex; gap:.2rem; background:#e2e5eb; padding:.2rem; border-radius:6px; }
+    .btn-device { padding:.25rem .55rem; font-size:.78rem; border:none; background:transparent; border-radius:4px; cursor:pointer; font-weight:600; color:var(--text-muted); }
+    .btn-device.active { background:#fff; color:var(--primary); box-shadow:0 1px 3px rgba(0,0,0,.1); }
+    .preview-stage { flex:1; display:flex; justify-content:center; align-items:stretch; background:#e9ecf2; padding:1rem; min-height:520px; }
+    .preview-frame-container { width:100%; max-width:100%; background:#fff; border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,.1); overflow:hidden; display:flex; flex-direction:column; transition:max-width .25s ease; }
+    #preview-frame { width:100%; flex:1; min-height:500px; border:none; background:#fff; }
+    .preview-console { border-top:1px solid var(--border); background:#1e1e24; color:#dcdcdc; font-family:var(--font-mono); font-size:.8rem; max-height:140px; overflow-y:auto; padding:.5rem .8rem; }
+    .console-header { font-size:.75rem; color:#888; margin-bottom:.3rem; display:flex; justify-content:space-between; }
+    .console-entry { margin:.15rem 0; word-break:break-all; }
+    .console-log { color:#85e89d; } .console-error { color:#f97583; } .console-warn { color:#ffd479; }
+    .status-box { padding:3rem 1.5rem; text-align:center; color:var(--text-muted); }
+    .status-box.error { color:var(--danger); background:#fff5f5; }
+    .spinner { display:inline-block; width:32px; height:32px; border:3px solid rgba(44,211,38,.2); border-radius:50%; border-top-color:var(--accent); animation:spin .8s linear infinite; margin-bottom:.8rem; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1000; align-items:center; justify-content:center; padding:1rem; }
+    .modal-overlay.active { display:flex; }
+    .modal-card { background:#fff; border-radius:var(--radius); max-width:550px; width:100%; box-shadow:0 10px 30px rgba(0,0,0,.25); overflow:hidden; }
+    .hidden { display:none !important; }
+    .badge-count { background:#e2e5eb; color:#495057; font-size:.75rem; font-weight:700; padding:.15rem .45rem; border-radius:999px; }
+    .toast { position:fixed; bottom:2rem; right:2rem; background:#1d3557; color:#fff; padding:.75rem 1.2rem; border-radius:6px; border-left:4px solid var(--accent); box-shadow:0 4px 15px rgba(0,0,0,.2); transform:translateY(100px); opacity:0; transition:all .25s ease; z-index:2000; font-size:.9rem; }
+    .toast.show { transform:translateY(0); opacity:1; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-container">
+    <div class="header-title">
+      <h1>
+        <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        Visor de Código &amp; Proyectos
+      </h1>
+      <p id="header-desc">Explorando repositorio y proyectos en GitHub</p>
+    </div>
+    <div class="repo-control">
+      <input type="text" id="input-repo" placeholder="usuario/repositorio" spellcheck="false" title="Introduce usuario/repositorio">
+      <select id="select-branch" title="Seleccionar rama"></select>
+      <button class="btn btn-primary" id="btn-load-repo">Explorar</button>
+      <button class="btn btn-secondary btn-sm" id="btn-user-repos" title="Ver todos los repos de este usuario">Repos</button>
+      <button class="btn btn-secondary btn-sm" id="btn-token" title="Configurar Token (evita rate limit)">🔑 Token</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <aside class="sidebar">
+    <div class="card">
+      <div class="card-header"><h3>Enlace directo GitHub</h3></div>
+      <div class="card-body" style="padding:.8rem 1rem;">
+        <div style="display:flex; gap:.4rem;">
+          <input type="text" id="url-directa" placeholder="https://github.com/.../blob/..." style="flex:1; min-width:0; padding:.4rem .6rem; font-size:.85rem; border:1px solid var(--border); border-radius:4px;">
+          <button class="btn btn-primary btn-sm" id="btn-cargar-directa">Ver</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>📁 Proyectos Detectados <span class="badge-count" id="count-projects">0</span></h3>
+      </div>
+      <div class="card-body">
+        <div class="project-list" id="project-list"></div>
+        <div class="search-box">
+          <svg viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+          <input type="text" id="file-search" placeholder="Filtrar archivos (ej. script.ts, .css)...">
+        </div>
+        <ul class="file-tree" id="file-tree"><li class="status-box">Cargando árbol de archivos...</li></ul>
+      </div>
+    </div>
+  </aside>
+
+  <section class="card viewer-card">
+    <div class="view-mode-tabs">
+      <button class="view-tab-btn active" id="tab-btn-code"><span>💻 Ver Código</span></button>
+      <button class="view-tab-btn" id="tab-btn-preview"><span>🚀 Vista Previa / Ejecución</span></button>
+    </div>
+
+    <div class="viewer-toolbar">
+      <div class="file-breadcrumbs" id="breadcrumbs"><span>Selecciona un fichero para comenzar</span></div>
+      <div class="viewer-actions">
+        <span id="file-meta" style="font-size:.8rem; color:var(--text-muted); margin-right:.4rem;"></span>
+        <button class="btn btn-outline btn-sm" id="btn-theme" title="Alternar tema oscuro / claro">🌓 Tema</button>
+        <button class="btn btn-outline btn-sm" id="btn-copy" title="Copiar código al portapapeles">📋 Copiar</button>
+        <a class="btn btn-outline btn-sm" id="btn-raw" target="_blank" rel="noopener" title="Abrir versión cruda (Raw)">⬇️ Raw</a>
+        <a class="btn btn-outline btn-sm" id="btn-github" target="_blank" rel="noopener" title="Abrir en GitHub.com">🐙 GitHub</a>
+        <button class="btn btn-success btn-sm hidden" id="btn-launch-preview" title="Ejecutar en la pestaña de vista previa">▶ Ver Ejecución</button>
+        <a class="btn btn-primary btn-sm hidden" id="btn-open-external" target="_blank" rel="noopener" title="Abrir página en vivo en nueva pestaña">🚀 Probar Web</a>
+      </div>
+    </div>
+
+    <div id="viewer-status" class="status-box">
+      <div class="spinner"></div>
+      <p>Cargando información del repositorio...</p>
+    </div>
+
+    <div class="code-wrapper hidden" id="code-wrapper">
+      <div class="code-container">
+        <div class="line-numbers" id="line-numbers">1</div>
+        <pre style="margin:0; flex:1; min-width:0;"><code id="code-content" class="code-content"></code></pre>
+      </div>
+    </div>
+
+    <div class="preview-wrapper hidden" id="preview-wrapper">
+      <div class="preview-header">
+        <div style="display:flex; align-items:center; gap:.6rem;">
+          <span style="font-size:.85rem; font-weight:600; color:var(--primary);" id="preview-title">Proyecto en ejecución</span>
+          <button class="btn btn-outline btn-sm" id="btn-reload-preview" title="Recargar ejecución">🔄 Recargar</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;">
+          <div class="preview-device-buttons">
+            <button class="btn-device active" data-width="100%">100%</button>
+            <button class="btn-device" data-width="1024px">🖥️ Desktop</button>
+            <button class="btn-device" data-width="768px">📱 Tablet</button>
+            <button class="btn-device" data-width="375px">📱 Móvil</button>
+          </div>
+          <a class="btn btn-primary btn-sm" id="btn-preview-external" target="_blank" rel="noopener">↗ Pestaña Externa</a>
+        </div>
+      </div>
+      <div class="preview-stage">
+        <div class="preview-frame-container" id="preview-frame-container">
+          <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin allow-modals allow-forms allow-popups"></iframe>
+          <div class="preview-console" id="preview-console">
+            <div class="console-header">
+              <span>Consola de Ejecución JS</span>
+              <span id="btn-clear-console" style="cursor:pointer; text-decoration:underline;">Limpiar</span>
+            </div>
+            <div id="console-logs"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal-overlay" id="modal-token">
+  <div class="modal-card">
+    <div class="card-header">
+      <h3>🔑 Token de GitHub (Opcional)</h3>
+      <button class="btn btn-sm btn-outline" onclick="toggleModal('modal-token', false)">✕</button>
+    </div>
+    <div class="card-body">
+      <p style="font-size:.9rem; color:var(--text-muted); margin-top:0;">
+        GitHub permite 60 peticiones/hora a usuarios anónimos. Si has alcanzado el límite, añade un Personal Access Token (solo lectura pública) para obtener 5.000/hora. Se guarda solo en tu navegador (<code>localStorage</code>).
+      </p>
+      <input type="password" id="input-token-val" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="width:100%; padding:.6rem; border:1px solid var(--border); border-radius:6px; margin-bottom:1rem; font-family:var(--font-mono);">
+      <div style="display:flex; justify-content:space-between;">
+        <button class="btn btn-outline" id="btn-clear-token">Borrar Token</button>
+        <button class="btn btn-primary" id="btn-save-token">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-repos">
+  <div class="modal-card" style="max-width:650px;">
+    <div class="card-header">
+      <h3 id="modal-repos-title">📦 Repositorios públicos</h3>
+      <button class="btn btn-sm btn-outline" onclick="toggleModal('modal-repos', false)">✕</button>
+    </div>
+    <div class="card-body" style="max-height:400px; overflow-y:auto;" id="modal-repos-list">
+      <div class="status-box"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Mensaje</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<script>
+  var DEFAULT_OWNER = "LuisVilRiv";
+  var DEFAULT_REPO = "dwecl";
+  var DEFAULT_BRANCH = "main";
+
+  function lsGet(k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+  const state = {
+    owner: DEFAULT_OWNER, repo: DEFAULT_REPO, branch: DEFAULT_BRANCH,
+    tree: [], projects: {}, activeProject: null, currentFile: null,
+    activeMode: "code", themeDark: true, token: lsGet("gh_token"), currentHtmlTarget: null
+  };
+
+  const $ = function(id) { return document.getElementById(id); };
+  const dom = {
+    inputRepo: $("input-repo"), selectBranch: $("select-branch"), btnLoadRepo: $("btn-load-repo"),
+    headerDesc: $("header-desc"), projectList: $("project-list"), countProjects: $("count-projects"),
+    fileTree: $("file-tree"), fileSearch: $("file-search"), breadcrumbs: $("breadcrumbs"),
+    fileMeta: $("file-meta"), viewerStatus: $("viewer-status"), tabBtnCode: $("tab-btn-code"),
+    tabBtnPreview: $("tab-btn-preview"), codeWrapper: $("code-wrapper"), codeContent: $("code-content"),
+    lineNumbers: $("line-numbers"), previewWrapper: $("preview-wrapper"), previewFrame: $("preview-frame"),
+    previewFrameContainer: $("preview-frame-container"), previewTitle: $("preview-title"),
+    btnReloadPreview: $("btn-reload-preview"), btnPreviewExternal: $("btn-preview-external"),
+    consoleLogs: $("console-logs"), btnClearConsole: $("btn-clear-console"), btnCopy: $("btn-copy"),
+    btnRaw: $("btn-raw"), btnGithub: $("btn-github"), btnLaunchPreview: $("btn-launch-preview"),
+    btnOpenExternal: $("btn-open-external"), btnTheme: $("btn-theme"), btnUserRepos: $("btn-user-repos"),
+    btnToken: $("btn-token"), urlDirecta: $("url-directa"), btnCargarDirecta: $("btn-cargar-directa"),
+    toast: $("toast")
+  };
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+  }
+
+  function encodePath(p) { return p.split("/").map(encodeURIComponent).join("/"); }
+
+  function getGitHubPagesUrl(owner, repo, relativePath) {
+    var isUserSite = repo.toLowerCase() === (owner.toLowerCase() + ".github.io");
+    var cleanPath = (relativePath || "").replace(/^\/+/, "");
+    var base = isUserSite ? "https://" + owner + ".github.io" : "https://" + owner + ".github.io/" + repo;
+    return cleanPath ? base + "/" + encodePath(cleanPath) : base + "/";
+  }
+
+  function rawBaseUrl() {
+    return "https://raw.githubusercontent.com/" + state.owner + "/" + state.repo + "/" + state.branch + "/";
+  }
+
+  /* Contexto inicial: por defecto LuisVilRiv/dwecl; se puede cambiar con ?repo=, ?user=, ?branch=, ?f= */
+  function initContext() {
+    var params = new URLSearchParams(window.location.search);
+    var host = window.location.hostname;
+    var detectedOwner = DEFAULT_OWNER, detectedRepo = DEFAULT_REPO;
+
+    if (host.endsWith(".github.io")) {
+      detectedOwner = host.split(".")[0];
+      var segments = window.location.pathname.split("/").filter(Boolean);
+      if (segments.length > 0 && !segments[0].endsWith(".html")) detectedRepo = segments[0];
+      else detectedRepo = detectedOwner + ".github.io";
+    }
+
+    if (params.get("repo")) {
+      var r = params.get("repo");
+      if (r.indexOf("/") !== -1) { var p = r.split("/"); detectedOwner = p[0]; detectedRepo = p[1]; }
+      else detectedRepo = r;
+    }
+    if (params.get("user") || params.get("owner")) detectedOwner = params.get("user") || params.get("owner");
+    if (params.get("branch")) state.branch = params.get("branch");
+
+    state.owner = detectedOwner;
+    state.repo = detectedRepo;
+    dom.inputRepo.value = state.owner + "/" + state.repo;
+    if (state.token) $("input-token-val").value = state.token;
+  }
+
+  async function githubApi(endpoint) {
+    var headers = { "Accept": "application/vnd.github.v3+json" };
+    if (state.token) headers["Authorization"] = "Bearer " + state.token;
+    var res = await fetch("https://api.github.com/" + endpoint, { headers: headers });
+    if (!res.ok) {
+      if (res.status === 403 || res.status === 429) throw new Error("Límite de peticiones de GitHub alcanzado. Configura un Token en 🔑 Token.");
+      if (res.status === 404) throw new Error("Repositorio o recurso no encontrado en GitHub (¿es privado?).");
+      throw new Error("Error HTTP " + res.status + ": " + res.statusText);
+    }
+    return await res.json();
+  }
+
+  async function loadRepository(owner, repo) {
+    state.owner = owner; state.repo = repo; state.currentFile = null;
+    dom.inputRepo.value = owner + "/" + repo;
+    showStatus("Analizando estructura del repositorio...");
+    try {
+      var repoData = await githubApi("repos/" + owner + "/" + repo);
+      dom.headerDesc.textContent = repoData.description || ("Repositorio de " + owner + " (" + repoData.stargazers_count + " ⭐)");
+      var branchesData = await githubApi("repos/" + owner + "/" + repo + "/branches?per_page=100");
+      var names = branchesData.map(function(b) { return b.name; });
+      if (!state.branch || names.indexOf(state.branch) === -1) state.branch = repoData.default_branch;
+      dom.selectBranch.innerHTML = "";
+      names.forEach(function(n) {
+        var opt = document.createElement("option");
+        opt.value = n; opt.textContent = n; opt.selected = (n === state.branch);
+        dom.selectBranch.appendChild(opt);
+      });
+      await loadTree();
+    } catch (err) {
+      showError("No se pudo cargar el repositorio: " + err.message);
+    }
+  }
+
+  async function loadTree() {
+    showStatus("Explorando ficheros en la rama '" + escapeHtml(state.branch) + "'...");
+    try {
+      var treeData = await githubApi("repos/" + state.owner + "/" + state.repo + "/git/trees/" + encodeURIComponent(state.branch) + "?recursive=1");
+      state.tree = (treeData.tree || []).filter(function(item) {
+        return item.type === "blob" && item.path.indexOf("node_modules/") === -1 && item.path.indexOf(".git/") !== 0;
+      });
+      analyzeProjects();
+      renderProjects();
+
+      var params = new URLSearchParams(window.location.search);
+      var targetFile = params.get("f") || params.get("file");
+      if (targetFile && !state.currentFile) {
+        var found = state.tree.find(function(f) { return f.path === targetFile; });
+        if (found) { selectProjectForFile(targetFile); loadFile(targetFile, found.size, true); return; }
+      }
+
+      var keys = Object.keys(state.projects).filter(function(k) { return k !== "Todos los archivos"; });
+      selectProject(keys.length > 0 ? keys[0] : "Todos los archivos");
+    } catch (err) {
+      showError("Error al leer el árbol de ficheros: " + err.message);
+    }
+  }
+
+  /* Un "proyecto" = carpeta con index.html más cercana al fichero (p. ej. ud1/fundamentos-js/ejercicio1).
+     Los ficheros sin ningún index.html por encima van a "Raíz / General". */
+  function analyzeProjects() {
+    var dirsConIndex = {};
+    state.tree.forEach(function(f) {
+      var m = f.path.match(/^(.*)\/index\.html$/i);
+      if (m) dirsConIndex[m[1]] = f.path;
+    });
+    state.fileProject = {};
+    state.projects = {};
+    state.tree.forEach(function(file) {
+      var parts = file.path.split("/");
+      var group = "Raíz / General";
+      for (var i = parts.length - 1; i >= 1; i--) {
+        var dir = parts.slice(0, i).join("/");
+        if (dirsConIndex[dir]) { group = dir; break; }
+      }
+      state.fileProject[file.path] = group;
+      (state.projects[group] = state.projects[group] || []).push(file);
+    });
+    var cmp = function(a, b) { return a.path.localeCompare(b.path, "es", { numeric: true }); };
+    var ordered = { "Todos los archivos": state.tree.slice().sort(cmp) };
+    Object.keys(state.projects)
+      .sort(function(a, b) {
+        if (a === "Raíz / General") return 1;
+        if (b === "Raíz / General") return -1;
+        return a.localeCompare(b, "es", { numeric: true });
+      })
+      .forEach(function(k) { ordered[k] = state.projects[k].sort(cmp); });
+    state.projects = ordered;
+  }
+
+  function renderProjects() {
+    dom.projectList.innerHTML = "";
+    var groups = Object.keys(state.projects);
+    dom.countProjects.textContent = groups.filter(function(g) { return g !== "Todos los archivos"; }).length;
+
+    groups.forEach(function(group) {
+      var files = state.projects[group];
+      var indexFile = files.find(function(f) { return f.path === group + "/index.html"; });
+
+      var card = document.createElement("div");
+      card.className = "project-card" + (state.activeProject === group ? " active" : "");
+      card.dataset.group = group;
+
+      var info = document.createElement("div");
+      info.className = "project-info";
+      var title = document.createElement("div");
+      title.className = "project-name";
+      var icon = group === "Todos los archivos" ? "📂" : (group === "Raíz / General" ? "📄" : "🚀");
+      title.innerHTML = icon + " <strong>" + escapeHtml(group) + "</strong>";
+      var meta = document.createElement("div");
+      meta.className = "project-meta";
+      meta.textContent = files.length + " archivo" + (files.length !== 1 ? "s" : "");
+      info.appendChild(title); info.appendChild(meta); card.appendChild(info);
+
+      if (indexFile && group !== "Todos los archivos") {
+        var btnVer = document.createElement("button");
+        btnVer.className = "btn btn-success btn-sm";
+        btnVer.title = "Ver ejecución interactiva del proyecto";
+        btnVer.textContent = "▶ Ver";
+        btnVer.onclick = function(e) { e.stopPropagation(); selectProject(group); launchExecution(indexFile.path); };
+        card.appendChild(btnVer);
+      }
+      card.onclick = function() { selectProject(group); };
+      dom.projectList.appendChild(card);
+    });
+  }
+
+  /* Al cambiar de proyecto se descarta el fichero actual para que se cargue el fichero por defecto del nuevo proyecto.
+     keepFile = true cuando se navega a un fichero concreto (no se debe perder). */
+  function selectProject(groupName, keepFile) {
+    state.activeProject = groupName;
+    if (!keepFile) state.currentFile = null;
+    Array.from(dom.projectList.children).forEach(function(el) {
+      el.classList.toggle("active", el.dataset.group === groupName);
+    });
+    renderFileList();
+  }
+
+  function selectProjectForFile(filePath) {
+    var group = state.fileProject && state.fileProject[filePath];
+    if (group) selectProject(group, true);
+  }
+
+  function getBadgeClass(f) {
+    f = f.toLowerCase();
+    if (f.endsWith(".ts") || f.endsWith(".tsx")) return { class: "badge-ts", text: "TS" };
+    if (f.endsWith(".js") || f.endsWith(".mjs")) return { class: "badge-js", text: "JS" };
+    if (f.endsWith(".html") || f.endsWith(".htm")) return { class: "badge-html", text: "HTML" };
+    if (f.endsWith(".css") || f.endsWith(".scss")) return { class: "badge-css", text: "CSS" };
+    if (f.endsWith(".json")) return { class: "badge-json", text: "JSON" };
+    if (f.endsWith(".md")) return { class: "badge-md", text: "MD" };
+    return { class: "badge-other", text: (f.split(".").pop() || "FILE").slice(0, 5) };
+  }
+
+  function detectLanguage(filename) {
+    var ext = filename.split(".").pop().toLowerCase();
+    var map = { ts:"typescript", tsx:"typescript", js:"javascript", jsx:"javascript", mjs:"javascript", cjs:"javascript",
+      html:"xml", htm:"xml", xml:"xml", svg:"xml", css:"css", scss:"css", json:"json", md:"markdown",
+      sh:"bash", bash:"bash", py:"python", c:"c", h:"c", cpp:"cpp", hpp:"cpp", java:"java", sql:"sql", yaml:"yaml", yml:"yaml", php:"php" };
+    return map[ext] || "plaintext";
+  }
+
+  /* Elige el fichero que se abre por defecto: primero un script, luego el index.html; se ignoran vacíos y .gitkeep */
+  function pickDefaultFile(files) {
+    var prefer = ["script.js", "main.js", "index.js", "app.js", "index.html"];
+    for (var i = 0; i < prefer.length; i++) {
+      var f = files.find(function(x) {
+        return x.path.split("/").pop().toLowerCase() === prefer[i] && x.size > 0;
+      });
+      if (f) return f;
+    }
+    return files.find(function(x) { return x.size > 0 && !/\.gitkeep$/i.test(x.path); }) || files[0];
+  }
+
+  function renderFileList() {
+    dom.fileTree.innerHTML = "";
+    var filter = dom.fileSearch.value.trim().toLowerCase();
+    var files = state.projects[state.activeProject] || state.tree;
+    var filtered = files.filter(function(f) { return f.path.toLowerCase().indexOf(filter) !== -1; });
+
+    if (filtered.length === 0) {
+      dom.fileTree.innerHTML = '<li class="status-box" style="padding:1.5rem;">No se encontraron archivos</li>';
+      return;
+    }
+
+    filtered.forEach(function(file) {
+      var li = document.createElement("li");
+      li.className = "file-item" + (state.currentFile === file.path ? " active" : "");
+      li.dataset.path = file.path;
+      var badge = getBadgeClass(file.path);
+      var displayPath = file.path;
+      if (state.activeProject !== "Todos los archivos" && state.activeProject !== "Raíz / General" &&
+          displayPath.indexOf(state.activeProject + "/") === 0) {
+        displayPath = displayPath.substring(state.activeProject.length + 1);
+      }
+      li.innerHTML =
+        '<div class="file-name-group" title="' + escapeHtml(file.path) + '">' +
+          '<span class="file-badge ' + badge.class + '">' + escapeHtml(badge.text) + '</span>' +
+          '<span>' + escapeHtml(displayPath) + '</span></div>' +
+        '<span style="font-size:.75rem; color:var(--text-muted); flex-shrink:0;">' + formatBytes(file.size) + '</span>';
+      li.onclick = function() { loadFile(file.path, file.size); };
+      dom.fileTree.appendChild(li);
+    });
+
+    if (!state.currentFile && filtered.length > 0) {
+      var def = pickDefaultFile(filtered);
+      if (def) loadFile(def.path, def.size, true);
+    }
+  }
+
+  function formatBytes(bytes) {
+    if (!bytes) return "0 B";
+    var k = 1024, sizes = ["B","KB","MB"];
+    var i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), 2);
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  }
+
+  /* skipRun = true: solo carga el código, sin relanzar la ejecución aunque estemos en la pestaña de vista previa */
+  async function loadFile(filePath, fileSize, skipRun) {
+    state.currentFile = filePath;
+    Array.from(dom.fileTree.querySelectorAll(".file-item")).forEach(function(item) {
+      item.classList.toggle("active", item.dataset.path === filePath);
+    });
+
+    updateBreadcrumbs(filePath);
+    var rawUrl = rawBaseUrl() + encodePath(filePath);
+    dom.btnRaw.href = rawUrl;
+    dom.btnGithub.href = "https://github.com/" + state.owner + "/" + state.repo + "/blob/" + state.branch + "/" + encodePath(filePath);
+
+    if (/\.html?$/i.test(filePath)) {
+      state.currentHtmlTarget = filePath;
+    } else {
+      var proj = state.projects[state.activeProject] || [];
+      var idx = proj.find(function(f) { return f.path === state.activeProject + "/index.html"; });
+      state.currentHtmlTarget = idx ? idx.path : null;
+    }
+    if (state.currentHtmlTarget) {
+      dom.btnLaunchPreview.classList.remove("hidden");
+      dom.btnOpenExternal.classList.remove("hidden");
+      dom.btnOpenExternal.href = getGitHubPagesUrl(state.owner, state.repo, state.currentHtmlTarget);
+    } else {
+      dom.btnLaunchPreview.classList.add("hidden");
+      dom.btnOpenExternal.classList.add("hidden");
+    }
+
+    showStatus("Descargando archivo...");
+    try {
+      var res = await fetch(rawUrl);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      var text = await res.text();
+      if (state.currentFile !== filePath) return; // el usuario cambió de fichero mientras cargaba
+
+      displayCode(text, filePath, fileSize || text.length);
+
+      var newUrl = new URL(window.location);
+      newUrl.searchParams.set("user", state.owner);
+      newUrl.searchParams.set("repo", state.repo);
+      newUrl.searchParams.set("branch", state.branch);
+      newUrl.searchParams.set("f", filePath);
+      try { window.history.replaceState({}, "", newUrl); } catch (e) {}
+
+      if (!skipRun && state.activeMode === "preview" && state.currentHtmlTarget) launchExecution(state.currentHtmlTarget);
+    } catch (err) {
+      showError("Error al descargar el fichero (" + escapeHtml(rawUrl) + "): " + escapeHtml(err.message));
+    }
+  }
+
+  function displayCode(code, filePath, size) {
+    dom.viewerStatus.classList.add("hidden");
+    if (state.activeMode === "code") {
+      dom.codeWrapper.classList.remove("hidden");
+      dom.previewWrapper.classList.add("hidden");
+    } else {
+      dom.previewWrapper.classList.remove("hidden");
+    }
+
+    var lang = detectLanguage(filePath);
+    var html;
+    try {
+      if (typeof hljs !== "undefined") {
+        if (lang !== "plaintext" && hljs.getLanguage(lang)) html = hljs.highlight(code, { language: lang, ignoreIllegals: true }).value;
+        else html = escapeHtml(code);
+      } else html = escapeHtml(code);
+    } catch (e) { html = escapeHtml(code); }
+
+    dom.codeContent.className = "code-content hljs language-" + lang;
+    dom.codeContent.innerHTML = html;
+
+    var lines = code.split("\n").length, numbers = [];
+    for (var i = 1; i <= lines; i++) numbers.push(i);
+    dom.lineNumbers.textContent = numbers.join("\n");
+    dom.fileMeta.textContent = lines + " líneas • " + formatBytes(size);
+  }
+
+  /* Resuelve una ruta relativa (href/src) respecto al HTML y devuelve la ruta dentro del repo */
+  function resolveRepoPath(htmlPath, ref) {
+    try {
+      var u = new URL(ref, "http://x/" + htmlPath);
+      return decodeURIComponent(u.pathname.replace(/^\//, ""));
+    } catch (e) { return null; }
+  }
+  function isExternal(ref) { return /^([a-z][a-z0-9+.-]*:|\/\/)/i.test(ref); }
+
+  async function launchExecution(htmlPath) {
+    if (!htmlPath) htmlPath = state.currentHtmlTarget;
+    if (!htmlPath) { showToast("No hay un archivo HTML seleccionado para ejecutar"); return; }
+
+    state.currentHtmlTarget = htmlPath;
+    switchMode("preview");
+    dom.previewTitle.textContent = "▶ Ejecutando: " + htmlPath;
+    dom.btnPreviewExternal.href = getGitHubPagesUrl(state.owner, state.repo, htmlPath);
+    clearConsole();
+    addConsoleLog("Iniciando entorno de ejecución interactiva...", "log");
+
+    try {
+      var htmlRes = await fetch(rawBaseUrl() + encodePath(htmlPath));
+      if (!htmlRes.ok) throw new Error("No se pudo cargar HTML (" + htmlRes.status + ")");
+      var htmlContent = await htmlRes.text();
+
+      var consoleScript =
+        '<script>(function(){' +
+        'var o={log:console.log,warn:console.warn,error:console.error};' +
+        'function send(t,a){var m=Array.prototype.map.call(a,function(x){try{return typeof x==="object"?JSON.stringify(x):String(x);}catch(e){return String(x);}}).join(" ");window.parent.postMessage({type:"CONSOLE_"+t.toUpperCase(),msg:m},"*");}' +
+        '["log","warn","error"].forEach(function(t){console[t]=function(){send(t,arguments);o[t].apply(console,arguments);};});' +
+        'window.addEventListener("error",function(e){send("error",["Error línea "+e.lineno+": "+e.message]);});' +
+        'document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[href]");if(!a)return;var h=a.getAttribute("href");if(!h||h.charAt(0)==="#"||/^(javascript:|mailto:)/i.test(h))return;if(/^([a-z][a-z0-9+.-]*:|\\/\\/)/i.test(h)){a.target="_blank";a.rel="noopener";return;}e.preventDefault();window.parent.postMessage({type:"NAVIGATE",href:h},"*");},true);' +
+        '})();<\/script>';
+
+      if (/<head[^>]*>/i.test(htmlContent)) htmlContent = htmlContent.replace(/<head[^>]*>/i, function(m) { return m + consoleScript; });
+      else htmlContent = consoleScript + htmlContent;
+
+      // CSS relativos → <style> inline
+      var cssTags = [];
+      htmlContent.replace(/<link\b[^>]*>/gi, function(tag) {
+        if (/rel=["']?stylesheet/i.test(tag)) {
+          var m = tag.match(/href=["']([^"']+)["']/i);
+          if (m) cssTags.push({ tag: tag, href: m[1] });
+        }
+        return tag;
+      });
+      for (var ci = 0; ci < cssTags.length; ci++) {
+        var cr = cssTags[ci];
+        if (isExternal(cr.href)) continue;
+        var cssPath = resolveRepoPath(htmlPath, cr.href);
+        if (!cssPath) continue;
+        try {
+          var cssRes = await fetch(rawBaseUrl() + encodePath(cssPath));
+          if (cssRes.ok) {
+            var cssText = await cssRes.text();
+            htmlContent = htmlContent.replace(cr.tag, function() { return "<style>/* " + cr.href + " */\n" + cssText + "</style>"; });
+            addConsoleLog("CSS vinculado: " + cr.href, "log");
+          } else addConsoleLog("No se encontró CSS: " + cr.href, "warn");
+        } catch (e) {}
+      }
+
+      // JS relativos → <script> inline
+      var jsTags = [], jsRegex = /<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>\s*<\/script>/gi, jm;
+      while ((jm = jsRegex.exec(htmlContent)) !== null) jsTags.push({ tag: jm[0], src: jm[1] });
+      for (var ji = 0; ji < jsTags.length; ji++) {
+        var jr = jsTags[ji];
+        if (isExternal(jr.src)) continue;
+        var jsPath = resolveRepoPath(htmlPath, jr.src);
+        if (!jsPath) continue;
+        var isModule = /type=["']module["']/i.test(jr.tag);
+        try {
+          var jsRes = await fetch(rawBaseUrl() + encodePath(jsPath));
+          if (jsRes.ok) {
+            var jsText = (await jsRes.text()).replace(/<\/script/gi, "<\\/script");
+            htmlContent = htmlContent.replace(jr.tag, function() {
+              return "<script" + (isModule ? ' type="module"' : "") + ">/* " + jr.src + " */\n" + jsText + "\n<\/script>";
+            });
+            addConsoleLog("Script cargado: " + jr.src, "log");
+          } else addConsoleLog("No se encontró script: " + jr.src, "warn");
+        } catch (e) {}
+      }
+
+      dom.previewFrame.srcdoc = htmlContent;
+      addConsoleLog("¡Proyecto renderizado y en ejecución!", "log");
+    } catch (err) {
+      addConsoleLog("Error al ejecutar: " + err.message, "error");
+      dom.previewFrame.srcdoc = '<div style="font-family:sans-serif;padding:2rem;color:#e63946;"><h3>Error de Ejecución</h3><p>' + escapeHtml(err.message) + '</p></div>';
+    }
+  }
+
+  window.addEventListener("message", function(event) {
+    if (event.source !== dom.previewFrame.contentWindow) return;
+    var d = event.data;
+    if (d && d.type === "NAVIGATE" && typeof d.href === "string") {
+      var dest = resolveRepoPath(state.currentHtmlTarget || "", d.href.split("#")[0].split("?")[0]);
+      if (dest && /\/$/.test(d.href)) dest += "/";
+      if (dest && !/\.html?$/i.test(dest)) dest = dest.replace(/\/?$/, "/index.html");
+      var found = state.tree.find(function(f) { return f.path === dest; });
+      if (!found) { addConsoleLog("Enlace no encontrado en el repositorio: " + d.href, "error"); return; }
+      selectProjectForFile(found.path);
+      loadFile(found.path, found.size);
+      return;
+    }
+    if (d && typeof d.type === "string" && d.type.indexOf("CONSOLE_") === 0) {
+      var t = d.type === "CONSOLE_ERROR" ? "error" : (d.type === "CONSOLE_WARN" ? "warn" : "log");
+      addConsoleLog(d.msg, t);
+    }
+  });
+
+  function addConsoleLog(msg, type) {
+    var entry = document.createElement("div");
+    entry.className = "console-entry console-" + (type || "log");
+    entry.textContent = "[" + new Date().toLocaleTimeString() + "] " + msg;
+    dom.consoleLogs.appendChild(entry);
+    var c = $("preview-console");
+    c.scrollTop = c.scrollHeight;
+  }
+  function clearConsole() { dom.consoleLogs.innerHTML = ""; }
+
+  function switchMode(mode) {
+    state.activeMode = mode;
+    var code = mode === "code";
+    dom.tabBtnCode.classList.toggle("active", code);
+    dom.tabBtnPreview.classList.toggle("active", !code);
+    dom.codeWrapper.classList.toggle("hidden", !code);
+    dom.previewWrapper.classList.toggle("hidden", code);
+    dom.viewerStatus.classList.add("hidden");
+
+    // Si se entra en "Ver Código" sin ningún fichero cargado, se abre el fichero por defecto del proyecto
+    if (code && !state.currentFile) {
+      var list = state.projects[state.activeProject] || state.tree;
+      var d = pickDefaultFile(list);
+      if (d) loadFile(d.path, d.size, true);
+    }
+  }
+
+  function updateBreadcrumbs(filePath) {
+    var parts = filePath.split("/");
+    var html = "<strong>" + escapeHtml(state.owner) + '</strong><span class="sep">/</span><strong>' + escapeHtml(state.repo) + '</strong><span class="sep">/</span>';
+    parts.forEach(function(p, idx) {
+      html += idx === parts.length - 1 ? "<strong>" + escapeHtml(p) + "</strong>" : "<span>" + escapeHtml(p) + '</span><span class="sep">/</span>';
+    });
+    dom.breadcrumbs.innerHTML = html;
+  }
+
+  function showStatus(msg) {
+    dom.viewerStatus.classList.remove("hidden", "error");
+    dom.viewerStatus.innerHTML = '<div class="spinner"></div><p>' + msg + '</p>';
+    dom.codeWrapper.classList.add("hidden");
+    dom.previewWrapper.classList.add("hidden");
+  }
+  function showError(msg) {
+    dom.viewerStatus.classList.remove("hidden");
+    dom.viewerStatus.classList.add("error");
+    dom.viewerStatus.innerHTML = '<p style="font-size:1.1rem;font-weight:bold;margin-bottom:.5rem;">⚠️ No se pudo cargar</p><p>' + escapeHtml(msg) + '</p>';
+    dom.codeWrapper.classList.add("hidden");
+    dom.previewWrapper.classList.add("hidden");
+  }
+  function showToast(msg) {
+    dom.toast.textContent = msg;
+    dom.toast.classList.add("show");
+    setTimeout(function() { dom.toast.classList.remove("show"); }, 2500);
+  }
+  function toggleModal(id, open) { $(id).classList.toggle("active", !!open); }
+
+  async function loadUserRepos() {
+    toggleModal("modal-repos", true);
+    $("modal-repos-title").textContent = "📦 Repositorios públicos de @" + state.owner;
+    var container = $("modal-repos-list");
+    container.innerHTML = '<div class="status-box"><div class="spinner"></div></div>';
+    try {
+      var repos = await githubApi("users/" + state.owner + "/repos?sort=updated&per_page=50");
+      if (repos.length === 0) { container.innerHTML = '<p style="text-align:center;color:var(--text-muted);">El usuario no tiene repositorios públicos.</p>'; return; }
+      container.innerHTML = "";
+      repos.forEach(function(r) {
+        var item = document.createElement("div");
+        item.style.cssText = "padding:.75rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:.5rem;cursor:pointer;";
+        item.innerHTML =
+          '<div><div style="font-weight:700;color:var(--primary);font-size:.95rem;">' + escapeHtml(r.name) + (r.fork ? ' <span style="font-size:.75rem;color:#888;">(fork)</span>' : '') + '</div>' +
+          '<div style="font-size:.8rem;color:var(--text-muted);">' + escapeHtml(r.description || "Sin descripción") + '</div></div>' +
+          '<div style="display:flex;align-items:center;gap:.5rem;"><span style="font-size:.8rem;color:var(--text-muted);">' + escapeHtml(r.language || "") + '</span>' +
+          '<button class="btn btn-primary btn-sm">Abrir</button></div>';
+        item.onclick = function() {
+          toggleModal("modal-repos", false);
+          state.branch = r.default_branch;
+          loadRepository(state.owner, r.name);
+        };
+        container.appendChild(item);
+      });
+    } catch (err) {
+      container.innerHTML = '<div class="status-box error">' + escapeHtml(err.message) + '</div>';
+    }
+  }
+
+  function parseGithubUrl(urlStr) {
+    var u = urlStr.trim();
+    if (!u) return null;
+    if (u.indexOf("https://raw.githubusercontent.com/") === 0) {
+      var parts = u.replace("https://raw.githubusercontent.com/", "").split("/");
+      if (parts.length >= 4) return { owner: parts[0], repo: parts[1], branch: parts[2], file: parts.slice(3).join("/") };
+    }
+    var m = u.match(/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+?)(?:[?#].*)?$/);
+    if (m) return { owner: m[1], repo: m[2], branch: m[3], file: decodeURIComponent(m[4]) };
+    var mRepo = u.match(/github\.com\/([^/]+)\/([^/?#]+)/);
+    if (mRepo) return { owner: mRepo[1], repo: mRepo[2].replace(/\.git$/, ""), branch: null, file: null };
+    return null;
+  }
+
+  /* Eventos */
+  dom.tabBtnCode.onclick = function() { switchMode("code"); };
+  dom.tabBtnPreview.onclick = function() { launchExecution(); };
+  dom.btnLaunchPreview.onclick = function() { launchExecution(); };
+  dom.btnReloadPreview.onclick = function() { launchExecution(); };
+  dom.btnClearConsole.onclick = clearConsole;
+
+  document.querySelectorAll(".btn-device").forEach(function(btn) {
+    btn.onclick = function() {
+      document.querySelectorAll(".btn-device").forEach(function(b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      dom.previewFrameContainer.style.maxWidth = btn.getAttribute("data-width");
+    };
+  });
+
+  dom.btnLoadRepo.onclick = function() {
+    var val = dom.inputRepo.value.trim();
+    if (!val) return;
+    state.branch = "";
+    if (val.indexOf("/") !== -1) { var p = val.split("/"); loadRepository(p[0], p[1]); }
+    else loadRepository(val, val + ".github.io");
+  };
+  dom.inputRepo.onkeydown = function(e) { if (e.key === "Enter") dom.btnLoadRepo.click(); };
+  dom.selectBranch.onchange = function() { state.branch = dom.selectBranch.value; state.currentFile = null; loadTree(); };
+  dom.fileSearch.oninput = renderFileList;
+
+  dom.btnCopy.onclick = function() {
+    if (!state.currentFile) return;
+    navigator.clipboard.writeText(dom.codeContent.textContent).then(
+      function() { showToast("¡Código copiado al portapapeles!"); },
+      function() { showToast("No se pudo copiar"); });
+  };
+
+  dom.btnTheme.onclick = function() {
+    state.themeDark = !state.themeDark;
+    var link = $("theme-link"), root = document.documentElement;
+    var set = function(a, b, c, d) {
+      root.style.setProperty("--code-bg", a); root.style.setProperty("--code-text", b);
+      root.style.setProperty("--line-num-color", c); root.style.setProperty("--line-num-border", d);
+    };
+    if (state.themeDark) {
+      link.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css";
+      set("#0d1117", "#e6edf3", "#7d8590", "#30363d");
+    } else {
+      link.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css";
+      set("#f6f8fa", "#24292f", "#8c959f", "#d0d7de");
+    }
+    showToast(state.themeDark ? "Tema oscuro activado" : "Tema claro activado");
+  };
+
+  dom.btnUserRepos.onclick = loadUserRepos;
+  dom.btnToken.onclick = function() { toggleModal("modal-token", true); };
+
+  $("btn-save-token").onclick = function() {
+    var val = $("input-token-val").value.trim();
+    state.token = val;
+    if (val) lsSet("gh_token", val); else lsDel("gh_token");
+    toggleModal("modal-token", false);
+    showToast("Token de GitHub guardado");
+    loadRepository(state.owner, state.repo);
+  };
+  $("btn-clear-token").onclick = function() {
+    $("input-token-val").value = ""; state.token = ""; lsDel("gh_token");
+    toggleModal("modal-token", false);
+    showToast("Token eliminado");
+  };
+
+  dom.btnCargarDirecta.onclick = async function() {
+    var parsed = parseGithubUrl(dom.urlDirecta.value);
+    if (!parsed) { showToast("URL de GitHub no reconocida"); return; }
+    if (parsed.owner !== state.owner || parsed.repo !== state.repo) {
+      state.branch = parsed.branch || "";
+      state.currentFile = null;
+      await loadRepository(parsed.owner, parsed.repo);
+    } else if (parsed.branch && parsed.branch !== state.branch) {
+      state.branch = parsed.branch;
+      dom.selectBranch.value = parsed.branch;
+      await loadTree();
+    }
+    if (parsed.file) { selectProjectForFile(parsed.file); loadFile(parsed.file); }
+  };
+  dom.urlDirecta.onkeydown = function(e) { if (e.key === "Enter") dom.btnCargarDirecta.click(); };
+
+  initContext();
+  loadRepository(state.owner, state.repo);
+</script>
+</body>
+</html>
